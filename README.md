@@ -36,17 +36,17 @@ The database is two tables:
 
 |Column|Type|Description|
 |------|----|-----------|
-|id|uuid|primary key|
-|email|string||
-|password|string||
-|first_name|string||
-|last_name|string||
+|username|text|primary key|
+|email|text||
+|password|blob||
+|first_name|text||
+|last_name|text||
 
 ### Todo Table
 
 |Column|Type|Description|
 |------|----|-----------|
 |id|uuid|primary key|
-|user_id|uuid|foreign key|
-|content|string||
-|status|number|0: open, 1: in progress, 2: done, 3: withdrawn, 4|
+|user_id|text|foreign key|
+|content|text||
+|status|int|0: open, 1: in progress, 2: done, 3: withdrawn, 4|
