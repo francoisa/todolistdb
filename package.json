@@ -1,0 +1,33 @@
+{
+  "name": "todolistdb",
+  "version": "1.0.0",
+  "description": "## Overview To do list service with cassandra db store",
+  "main": "src/server.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/francoisa/todolistdb.git"
+  },
+  "author": "andre.francois@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/francoisa/todolistdb/issues"
+  },
+  "homepage": "https://github.com/francoisa/todolistdb#readme",
+  "dependencies": {
+    "babel-eslint": "^7.1.1",
+    "body-parser": "^1.15.2",
+    "cassandra-driver": "^3.1.6",
+    "connect": "^3.5.0",
+    "connect-rest": "^2.11.0",
+    "cors": "^2.8.1",
+    "eslint": "^3.12.2",
+    "express": "^4.14.0",
+    "morgan": "^1.7.0"
+  },
+  "devDependencies": {
+    "restler": "^3.4.0"
+  }
+}
