@@ -4,7 +4,7 @@ CREATE KEYSPACE "todolist" WITH REPLICATION = {
 
 USE "todolist";
 
-CREATE TABLE "users" (
+CREATE TABLE IF NOT EXISTS "users" (
   "username" text PRIMARY KEY,
   "email" text,
   "password" blob,
@@ -12,7 +12,7 @@ CREATE TABLE "users" (
   "last_name" text
 );
 
-CREATE TABLE "todos" (
+CREATE TABLE IF NOT EXISTS "todos" (
   "username" text,
   "id" timeuuid,
   "content" text,
