@@ -7,6 +7,7 @@ USE "todolist";
 CREATE TABLE IF NOT EXISTS "users" (
   "username" text PRIMARY KEY,
   "email" text,
+  "salt" bigint, 
   "password" blob,
   "first_name" text,
   "last_name" text
