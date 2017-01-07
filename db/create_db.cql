@@ -2,12 +2,16 @@ CREATE KEYSPACE "todolist" WITH REPLICATION = {
   'class': 'SimpleStrategy', 'replication_factor': 1
 };
 
+CREATE KEYSPACE "todolist_dev" WITH REPLICATION = {
+  'class': 'SimpleStrategy', 'replication_factor': 1
+};
+
 USE "todolist";
 
 CREATE TABLE IF NOT EXISTS "users" (
   "username" text PRIMARY KEY,
   "email" text,
-  "salt" bigint, 
+  "salt" bigint,
   "password" blob,
   "first_name" text,
   "last_name" text

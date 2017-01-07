@@ -1,15 +1,21 @@
-var http = require('http');
-var express = require('express');
-var app = express();
+"use strict";
 
-app.set('port', process.env.PORT || 3000);
+const sha1 = require('sha1');
+const assert = require('assert');
+const http = require('http');
+const express = require('express');
+const app = express();
+const DEFAULT_PORT = 3000;
+
+app.set('port', process.env.PORT || DEFAULT_PORT);
 
 // logging
 switch(app.get('env')){
     case 'development':
     	// compact, colorful dev logging
     	app.use(require('morgan')('dev'));
-        break;
+      keyspace += '_dev';
+      break;
     case 'production':
         // module 'express-logger' supports daily log rotation
         app.use(require('express-logger')({ path: __dirname + '/log/requests.log'}));
@@ -34,25 +40,130 @@ apiOptions.domain.on('error', function(err) {
 });
 
 const cassandra = require('cassandra-driver');
-const client = new cassandra.Client({ contactPoints: ['192.168.2.10'], keyspace: 'todolist' });
+var keyspace ='todolist_dev';
+//const DEFAULT_NODE = '192.168.2.10';
+const DEFAULT_NODE = '127.0.0.1';
+const node = process.env.NODE || DEFAULT_NODE;
+const client = new cassandra.Client({ contactPoints: [node], keyspace: keyspace });
 
 // link API into pipeline
-var connect = require('connect');
-var bodyParser = require('body-parser');
-var Rest = require('connect-rest');
-var rest = Rest.create(apiOptions);
+const connect = require('connect');
+const bodyParser = require('body-parser');
+const rest = require('connect-rest').create(apiOptions);
 
 rest.get('/users', function(req, content, cb) {
-  var users = [];
-  users[0] = {id: '1', email: 'a@b.com', password: 'asdasd', first_name: 'andre', last_name: 'francois'};
-  cb(null, users.map(function(a) {
-    return {
-      id: a.id,
-      email: a.email,
-      first_name: a.first_name,
-      last_name: a.last_name
-    };
-  }));
+  client.connect(function (err) {
+    if (err) {
+      client.shutdown();
+      return console.error('There was an error when connecting', err);
+    }
+    console.log('Connected to cluster with %d host(s): %j', client.hosts.length, client.hosts.keys());
+    const sel_user = 'SELECT username, email, first_name, last_name FROM users';
+    client.execute(sel_user, [], { prepare: true }, function(err, result) {
+      assert.ifError(err);
+      var users = [];
+      result.rows.map(function(u) {
+        users.push({username: u.username, email: u.email,
+            first_name: u.first_name, last_name: u.last_name});
+      });
+      cb(null, users);
+    });
+  });
+});
+
+rest.get('/user/authenticate/:id/:pwd', function(req, content, cb) {
+  client.connect(function (err) {
+    if (err) {
+      client.shutdown();
+      return console.error('There was an error when connecting', err);
+    }
+    console.log('Connected to cluster with %d host(s): %j', client.hosts.length, client.hosts.keys());
+    var id = req.params.id;
+    var pwd = req.params.pwd;
+    const sel_user = 'SELECT username, email, password, salt FROM users WHERE username = ?';
+    client.execute(sel_user, [id], { prepare: true }, function(err, result) {
+      assert.ifError(err);
+      var user = {result: "ERROR", code: "INVALID_USER"};
+      result.rows.map(function(u) {
+        var password = sha1(pwd + u.salt);
+        if (password === u.password.toString("hex")) {
+          user = {result: "SUCCESS", username: u.username, email: u.email,
+              first_name: u.first_name, last_name: u.last_name};
+        }
+        else {
+          user = {result: "ERROR", code: "INVALID_PASSWORD"};
+        }
+      });
+      cb(null, user);
+    });
+  });
+});
+
+rest.get('/user/:id', function(req, content, cb) {
+  client.connect(function (err) {
+    if (err) {
+      client.shutdown();
+      return console.error('There was an error when connecting', err);
+    }
+    console.log('Connected to cluster with %d host(s): %j', client.hosts.length, client.hosts.keys());
+    var id = req.params.id;
+    const sel_user = 'SELECT username, email, first_name, last_name, password, salt FROM users WHERE username = ?';
+    client.execute(sel_user, [id], { prepare: true }, function(err, result) {
+      assert.ifError(err);
+      var user = {result: "ERROR", code: "INVALID_USER"};
+      result.rows.map(function(u) {
+        user = {username: u.username, email: u.email,
+            first_name: u.first_name, last_name: u.last_name};
+      });
+      cb(null, user);
+    });
+  });
+});
+
+rest.put('/user', function(req, content, cb) {
+  client.connect(function (err) {
+    if (err) {
+      client.shutdown();
+      return console.error('There was an error when connecting', err);
+    }
+    console.log('Connected to cluster with %d host(s): %j', client.hosts.length, client.hosts.keys());
+    var id = req.params.id;
+    var password = req.params.id;
+    var email = req.params.id;
+    var first_name = req.params.id;
+    var last_name = req.params.id;
+    const sel_user = 'SELECT username, email, first_name, last_name, password, salt FROM users WHERE username = ?';
+    client.execute(sel_user, [id], { prepare: true }, function(err, result) {
+      assert.ifError(err);
+      var user = {result: "ERROR", code: "INVALID_USER"};
+      result.rows.map(function(u) {
+        user = {username: u.username, email: u.email,
+            first_name: u.first_name, last_name: u.last_name};
+      });
+      cb(null, user);
+    });
+  });
+});
+
+rest.post('/user', function(req, content, cb) {
+  client.connect(function (err) {
+    if (err) {
+      client.shutdown();
+      return console.error('There was an error when connecting', err);
+    }
+    console.log('Connected to cluster with %d host(s): %j', client.hosts.length, client.hosts.keys());
+    var id = req.params.id;
+    const sel_user = 'SELECT username, email, first_name, last_name, password, salt FROM users WHERE username = ?';
+    client.execute(sel_user, [id], { prepare: true }, function(err, result) {
+      assert.ifError(err);
+      var user = {result: "ERROR", code: "INVALID_USER"};
+      result.rows.map(function(u) {
+        user = {username: u.username, email: u.email,
+            first_name: u.first_name, last_name: u.last_name};
+      });
+      cb(null, user);
+    });
+  });
 });
 
 app.use(rest.processRequest());
