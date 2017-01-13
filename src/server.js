@@ -128,19 +128,32 @@ rest.put('/user', function(req, content, cb) {
     }
     console.log('Connected to cluster with %d host(s): %j', client.hosts.length, client.hosts.keys());
     var id = req.params.id;
-    var password = req.params.id;
-    var email = req.params.id;
-    var first_name = req.params.id;
-    var last_name = req.params.id;
-    const sel_user = 'SELECT username, email, first_name, last_name, password, salt FROM users WHERE username = ?';
-    client.execute(sel_user, [id], { prepare: true }, function(err, result) {
-      assert.ifError(err);
-      var user = {result: "ERROR", code: "INVALID_USER"};
-      result.rows.map(function(u) {
-        user = {username: u.username, email: u.email,
-            first_name: u.first_name, last_name: u.last_name};
-      });
-      cb(null, user);
+    var params = {};
+    params['password'] = req.params.password;
+    params['email'] = req.params.id;
+    params['first_name'] = req.params.id;
+    params['last_name'] = req.params.id;
+    var has_param = false;
+    var param_cql;
+    var upd_params = [];
+    foreach (p in params) {
+      var param = params[p];
+      if (param) {
+        param_cql += p + " = " + param + ", ";
+        upd_params.add(param);
+      }
+    }
+    if (param_cql) {
+      upd_params.push(req.params.username);
+      param_cql = param_cql.substr(0, param_cql.length - 2);
+      const upd_user = "UPDATE users SET + " + param_cql + " WHERE username = ?";
+      client.execute(upd_user, upd_params, { prepare: true }, function(err, result) {
+        assert.ifError(err);
+        var user = {result: "ERROR", code: "INVALID_USER"};
+        cb(null, user);
+        }
+       );
+    }
     });
   });
 });
