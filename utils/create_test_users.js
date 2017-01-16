@@ -2,7 +2,7 @@ const cassandra = require('cassandra-driver');
 const sha1 = require('sha1');
 const assert = require('assert');
 
-const client = new cassandra.Client({ contactPoints: ['127.0.0.1'], keyspace: 'todolist_dev' });
+const client = new cassandra.Client({ contactPoints: ['192.168.2.10'], keyspace: 'todolist' });
 
 client.connect(function (err) {
   if (err) {
