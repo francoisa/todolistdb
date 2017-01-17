@@ -167,6 +167,23 @@ function buildUpRestAPI(rest) {
     });
   });
 
+  rest.del('/user/:id', function(req, content, cb) {
+    client.connect(function (err) {
+      if (err) {
+        client.shutdown();
+        return console.error('There was an error when connecting', err);
+      }
+      console.log('Connected to cluster with %d host(s): %j', client.hosts.length, client.hosts.keys());
+      var id = req.params.id;
+      const del_user = 'DELETE FROM users WHERE username = ?';
+      client.execute(del_user, [id], { prepare: true }, function(err, result) {
+        var user = {result: "ERROR", code: "INVALID_USER"};
+        assert.ifError(err);
+        user = {result: "SUCCESS", username: id};
+        cb(null, user);
+      });
+    });
+  });
 }
 
 function getDispatcher (rest) {
