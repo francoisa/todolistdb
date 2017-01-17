@@ -132,15 +132,36 @@ function buildUpRestAPI(rest) {
         return console.error('There was an error when connecting', err);
       }
       console.log('Connected to cluster with %d host(s): %j', client.hosts.length, client.hosts.keys());
-      var id = req.body.id;
-      const sel_user = 'SELECT username, email, first_name, last_name, password, salt FROM users WHERE username = ?';
-      client.execute(sel_user, [id], { prepare: true }, function(err, result) {
+      var username = content.username;
+      const sel_user = 'SELECT email FROM users WHERE username = ?';
+      client.execute(sel_user, [username], { prepare: true }, function(err, result) {
         assert.ifError(err);
-        var user = {result: "ERROR", code: "INVALID_USER"};
+        var user;
         result.rows.map(function(u) {
-          user = {username: u.username, email: u.email,
-              first_name: u.first_name, last_name: u.last_name};
+          user = {result: "ERROR", code: "INVALID_USER"};
         });
+        if (user === undefined) {
+          var params = [];
+          params.push(username);
+          var salt = Date.now();
+          params.push(salt);
+          var password = sha1(content.password + salt);
+          var pwdBuffer = Buffer.from(password, "hex");
+          params.push(pwdBuffer);
+          params.push(content.email);
+          params.push(content.first_name);
+          params.push(content.last_name);
+          const ins_user = 'INSERT INTO users (username, salt, password, email, first_name, last_name) VALUES (?, ?, ?, ?, ?, ?)';
+          client.execute(ins_user, params, { prepare: true }, function(err, result) {
+            assert.ifError(err);
+            console.log('Inserted a row.');
+          });
+          user = {username: content.username, email: content.email,
+              first_name: content.first_name, last_name: content.last_name};
+        }
+        else {
+          console.log('User ' + username + ' exists');
+        }
         cb(null, user);
       });
     });
