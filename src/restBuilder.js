@@ -8,13 +8,33 @@ const app = express();
 const DEFAULT_PORT = 3000;
 
 const cassandra = require('cassandra-driver');
-var keyspace ='todolist';
-const DEFAULT_NODE = '192.168.2.10';
+var keyspace ='todolist_dev';
+const DEFAULT_NODE = '127.0.0.1';
 const node = process.env.NODE || DEFAULT_NODE;
 const client = new cassandra.Client({ contactPoints: [node], keyspace: keyspace });
 
 
 function buildUpRestAPI(rest) {
+  rest.get('/todos/:username', function(req, content, cb) {
+    client.connect(function (err) {
+      if (err) {
+        client.shutdown();
+        return console.error('There was an error when connecting', err);
+      }
+      console.log('Connected to cluster with %d host(s): %j', client.hosts.length, client.hosts.keys());
+      var username = req.params.username;
+      const sel_todos= 'SELECT id, content, status FROM todos WHERE username = ?';
+      client.execute(sel_todos, [username], { prepare: true }, function(err, result) {
+        assert.ifError(err);
+        var todos = [];
+        result.rows.map(function(t) {
+          todos.push({id: t.id, content: t.content, status: t.status});
+        });
+        cb(null, todos);
+      });
+    });
+  });
+
   rest.get('/users', function(req, content, cb) {
     client.connect(function (err) {
       if (err) {

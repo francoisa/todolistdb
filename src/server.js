@@ -7,8 +7,8 @@ let connect = require('connect'),
 	cookieSession = require('cookie-session'),
 	compression = require('compression'),
 	timeout = require('connect-timeout'),
-	serveStatic = require('serve-static'),
 	bodyParser = require('body-parser');
+//	serveStatic = require('serve-static'),
 
 let Rest = require('connect-rest');
 let restBuilder = require('./restBuilder');
